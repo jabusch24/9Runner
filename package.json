@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run -s build && node --test dist/test/",
+    "test": "npm run -s build && node --test dist/test/*.test.js",
     "cli": "npm run -s build && node dist/src/cli/index.js",
     "probe": "npm run -s cli -- probe",
     "seed": "npm run -s cli -- seed",
@@ -28,6 +28,7 @@
     "demo": "npm run -s build && node dist/src/server/index.js"
   },
   "dependencies": {
+    "chart.js": "^4.4.1",
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
     "mongodb": "^7.7.0"

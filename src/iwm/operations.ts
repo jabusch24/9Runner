@@ -21,7 +21,8 @@ export const OP_CLASSES = {
 export type OpClass = keyof typeof OP_CLASSES;
 export const OP_CLASS_NAMES = Object.keys(OP_CLASSES) as OpClass[];
 
-export const DEFAULT_MIX = 'product-page:40,category-listing:20,search:8,checkout:8,inventory:10,analytics:6,heavy-report:8';
+// 60% reads, 20% writes, 10% aggregations, 10% expensive operations
+export const DEFAULT_MIX = 'product-page:35,category-listing:17,search:8,checkout:10,inventory:10,analytics:10,heavy-report:10';
 
 export function parseMix(spec: string, searchAvailable: boolean): { classes: OpClass[]; weights: number[]; normalized: Record<string, number> } {
   const classes: OpClass[] = [];

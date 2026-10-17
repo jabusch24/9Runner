@@ -1,0 +1,39 @@
+# Local rehearsal environment: MongoDB with Search (mongot) in one container.
+# This is NOT a substitute for Atlas: IWM and Load Shedding are Atlas features.
+# The image tag is pinned by ATLAS_LOCAL_TAG (at the time of writing `latest`
+# was 8.3.x; check `npm run probe` for what you actually got).
+services:
+  mongodb:
+    image: mongodb/mongodb-atlas-local:${ATLAS_LOCAL_TAG:-latest}
+    hostname: mongodb-local
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+      - mongot-data:/data/mongot
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ping:1}).ok"]
+      interval: 5s
+      retries: 30
+
+  # Optional: run the demo UI in a container too (`docker compose --profile app up`).
+  # For Atlas load tests run the load generator on a VM in the cluster's region instead.
+  app:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    env_file: .env
+    environment:
+      LOCAL_URI: mongodb://mongodb-local:27017/?directConnection=true
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./results:/app/results
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+volumes:
+  mongodb-data:
+  mongot-data:

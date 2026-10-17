@@ -72,7 +72,9 @@ export function generateProduct(id: number, seed: string, productCount: number):
   const brand = brandPickers.get(cat.name)!.pick(rng);
   const traits = BRAND_TRAITS[brand] ?? { quality: 0, premium: 1 };
   const subcategory = rng.pick(cat.subcategories);
-  const model = rng.pick(cat.models);
+  // Each brand owns a few model lines of its category, so "On Adizero" doesn't happen.
+  const brandIdx = cat.brands.findIndex((b) => b[0] === brand);
+  const model = cat.models[(brandIdx * 2 + rng.int(0, 1)) % cat.models.length];
   const series = rng.int(1, 45);
   const variant = rng.chance(0.25) ? ` ${rng.pick(['Pro', 'Lite', 'GTX', 'Max', 'Plus', 'SE', 'Elite'])}` : '';
   const name = `${brand} ${model}${variant} ${series} ${cat.noun}`;

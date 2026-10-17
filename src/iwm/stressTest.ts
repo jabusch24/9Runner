@@ -69,7 +69,7 @@ export type StressRun = {
   atlasMetrics?: unknown;
 };
 
-export type ProgressEvent = { type: 'stress-progress'; envId: string; label: string; point: TimelinePoint; totalSec: number };
+export type ProgressEvent = { type: 'stress-progress'; envId: string; label: string; point: TimelinePoint; totalSec: number; phases: Schedule['phases'] };
 
 const emptyTotals = (): Totals => ({ attempted: 0, clientDropped: 0, ok: 0, okWithinSlo: 0, rejected: 0, timeouts: 0, errors: 0, retries: 0 });
 
@@ -85,12 +85,15 @@ class Acc {
   seconds = new Set<number>();
   summarize(): OutcomeSummary {
     const secs = this.seconds.size || 1;
+    const completed = this.t.ok + this.t.rejected + this.t.timeouts + this.t.errors + this.t.clientDropped;
     return {
       ...this.t,
       accepted: this.t.attempted - this.t.clientDropped - this.t.rejected,
       serverRejectedAttempts: this.serverRejected,
       latency: this.h.summary(),
-      sloCompliancePct: this.t.attempted - this.t.clientDropped > 0 ? round((this.t.okWithinSlo / (this.t.attempted - this.t.clientDropped)) * 100, 1) : null,
+      // Outcomes are bucketed by completion time, so the denominator is completed
+      // outcomes too (attempts are bucketed by send time and would not match per phase).
+      sloCompliancePct: completed > 0 ? round((this.t.okWithinSlo / completed) * 100, 1) : null,
       goodputPerSec: round(this.t.okWithinSlo / secs, 1),
     };
   }
@@ -173,7 +176,7 @@ export async function runStressTest(env: DemoEnvironment, opts: StressOptions): 
       inflight, clientEventLoopP99Ms: eld, server: serverSamples.get(sec),
     };
     timeline.push(point);
-    opts.onProgress?.({ type: 'stress-progress', envId: env.id, label, point, totalSec: schedule.totalSec });
+    opts.onProgress?.({ type: 'stress-progress', envId: env.id, label, point, totalSec: schedule.totalSec, phases: schedule.phases });
   };
 
   const startedAt = new Date();

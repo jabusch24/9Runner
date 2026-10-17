@@ -17,7 +17,7 @@ export type DatasetMeta = {
 };
 
 // Bump when generate.ts changes in a way that alters documents.
-export const GENERATOR_VERSION = 1;
+export const GENERATOR_VERSION = 2;
 
 type Log = (m: string) => void;
 
