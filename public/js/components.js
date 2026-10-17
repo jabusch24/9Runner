@@ -160,6 +160,8 @@ export function jobPanel({ benchmark, defaultEnvs = [], fields = [], onDone, onP
     if (!log.isConnected && !button.isConnected) { bus.off(handler); return; } // tab was closed
     if (e.type === 'log') { log.textContent += e.line + '\n'; log.scrollTop = log.scrollHeight; }
     if (e.type === 'stress-progress') onProgress?.(e);
+    if (e.type === 'job' && e.job.state === 'running') { button.disabled = true; status.textContent = `${e.job.benchmark} is running…`; }
+    if (e.type === 'job' && e.job.state !== 'running' && e.job.benchmark !== benchmark) { button.disabled = false; status.textContent = ''; }
     if (e.type === 'job' && e.job.benchmark === benchmark && e.job.state !== 'running') {
       button.disabled = false;
       status.textContent = e.job.state === 'done' ? 'finished' : `failed: ${e.job.error}`;

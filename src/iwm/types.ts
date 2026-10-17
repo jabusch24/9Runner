@@ -45,6 +45,8 @@ export type WorkerConfig = {
   maxInflight: number;
   retryMode: RetryMode;
   appMaxRetries: number;
+  /** retries allowed per original request, e.g. 0.1 = at most 10% extra load */
+  retryBudget: number;
 };
 
 export type WorkerMessage =

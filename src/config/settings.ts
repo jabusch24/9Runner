@@ -46,6 +46,7 @@ export const settings = {
   get maxInflightPerWorker() { return num('MAX_INFLIGHT_PER_WORKER', 5_000); },
   get clientRetryMode() { return str('CLIENT_RETRY_MODE', 'none') as 'none' | 'driver' | 'app'; },
   get appMaxRetries() { return num('APP_MAX_RETRIES', 3); },
+  get appRetryBudget() { return num('APP_RETRY_BUDGET', 0.1); },
   get cooldownSeconds() { return num('COOLDOWN_SECONDS', 30); },
   get canaryRps() { return num('CANARY_RPS', 5); },
 

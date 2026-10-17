@@ -28,6 +28,10 @@ type Bucket = { perClass: Map<string, { c: Omit<ClassCounters, 'hist'>; h: Histo
 const buckets = new Map<number, Bucket>();
 let t0 = 0;
 let inflight = 0;
+// Retry budget (token bucket): each original request earns `retryBudget` tokens,
+// each retry spends one. Without it, retries under sustained overload multiply
+// the load - the classic retry storm.
+let retryTokens = 10;
 
 function bucket(sec: number): Bucket {
   let b = buckets.get(sec);
@@ -123,6 +127,7 @@ async function main() {
     }
     counters(sentSec, cls).c.attempted++;
     inflight++;
+    retryTokens = Math.min(retryTokens + cfg.retryBudget, 100);
     let attempt = 0;
     let outcome: ReturnType<typeof classifyError> | null = null;
     const deadline = scheduledAt + cfg.opTimeoutMs;
@@ -140,10 +145,11 @@ async function main() {
         outcome = { kind: 'ok', code: 'ok' };
       } catch (e) {
         outcome = classifyError(e);
-        const retryable = outcome.kind === 'rejected' && cfg.retryMode === 'app' && attempt < cfg.appMaxRetries
+        const retryable = outcome.kind === 'rejected' && cfg.retryMode === 'app' && attempt < cfg.appMaxRetries && retryTokens >= 1
           && (READ_CLASSES.has(cls) || (e instanceof MongoError && e.hasErrorLabel('RetryableError')));
         if (retryable) {
           attempt++;
+          retryTokens -= 1;
           counters(nowSec(), cls).c.retries++;
           // Full-jitter exponential backoff, as recommended for overload errors.
           const backoff = Math.random() * Math.min(2_000, 50 * 2 ** attempt);

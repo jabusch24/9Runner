@@ -124,7 +124,7 @@ export async function runStressTest(env: DemoEnvironment, opts: StressOptions): 
   const schedule = opts.schedule;
   const config = {
     workers, poolSizePerWorker: settings.poolSizePerWorker, maxInflightPerWorker: settings.maxInflightPerWorker,
-    sloMs: settings.sloMs, opTimeoutMs: settings.opTimeoutMs, retryMode, appMaxRetries: settings.appMaxRetries,
+    sloMs: settings.sloMs, opTimeoutMs: settings.opTimeoutMs, retryMode, appMaxRetries: settings.appMaxRetries, appRetryBudget: settings.appRetryBudget,
     mix: parsedMix.normalized, searchInMix: searchAvailable, canaryRps: settings.canaryRps,
   };
   log(`[${env.id}] ${label}: ${schedule.phases.map((p) => `${p.name} ${p.durationSec}s@${p.rpsStart}${p.rpsEnd !== p.rpsStart ? '→' + p.rpsEnd : ''}`).join(' | ')} | ${workers} workers, retry=${retryMode}, SLO ${settings.sloMs}ms`);
@@ -188,7 +188,7 @@ export async function runStressTest(env: DemoEnvironment, opts: StressOptions): 
           workerIndex: i, workers, uri: env.uri, dbName: settings.dbName, schedule, mix, searchAvailable,
           searchIndex: settings.searchIndexName, productCount: dataset.productCount, reviewCount: dataset.reviewCount, seed: settings.seed,
           sloMs: settings.sloMs, opTimeoutMs: settings.opTimeoutMs, poolSize: settings.poolSizePerWorker,
-          maxInflight: settings.maxInflightPerWorker, retryMode, appMaxRetries: settings.appMaxRetries,
+          maxInflight: settings.maxInflightPerWorker, retryMode, appMaxRetries: settings.appMaxRetries, retryBudget: settings.appRetryBudget,
         };
         const w = new Worker(workerUrl, { workerData: cfg });
         pool.push(w);

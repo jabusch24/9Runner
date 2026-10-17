@@ -146,7 +146,10 @@ waits until it's queryable. `npm run probe` reports its status and whether facet
 - **Client behaviour** (`CLIENT_RETRY_MODE`):
   - `none` (default) - no driver retries: you see exactly what the server did
   - `app` - the workload retries overload errors itself with full-jitter exponential backoff
-    (up to `APP_MAX_RETRIES`), and every retry is counted
+    (up to `APP_MAX_RETRIES`) **within a retry budget** (`APP_RETRY_BUDGET=0.1`: retries add at
+    most ~10% load), and every retry is counted. Without a budget, retries under *sustained*
+    overload multiply the load - in local tests unbudgeted retries tripled the request volume and
+    made everything worse. Set `APP_RETRY_BUDGET=100` to demonstrate that retry storm deliberately.
   - `driver` - driver defaults. Node.js driver 7.x retries `SystemOverloadedError` up to
     `maxAdaptiveRetries` (2) times, which hides rejections inside slower successes. Server rejections
     are still counted through command monitoring ("server rejections absorbed by driver retries").
@@ -209,6 +212,18 @@ out / error shares. **Recovery** is the time after the overload ends until criti
 **Aggregation comparison:** x = share of the catalogue the query matches, y = p50 (log). Each
 variant keeps one colour. The per-query tables show p50/p95/p99, throughput, the bootstrap
 comparison ("1.6x faster, 95% CI …" or "statistically similar") and a parity badge.
+
+### Effects you may see that are not bugs
+
+- **`MongoPoolClearedError`**: when requests hit their deadline the driver closes those connections
+  (CSOT). Replacement connections must handshake; if the handshake itself is rejected under overload,
+  the driver marks the server unknown and clears the pool, failing other in-flight requests. Observed
+  with local emulation (where the ingress limiter also limits handshakes); counted as "errors".
+- **APP QUEUE FULL**: more than `MAX_INFLIGHT_PER_WORKER` requests were waiting in the application.
+  That is a consequence of a slow server, counted as failed requests, and does not invalidate a run.
+- **CLIENT-BOUND**: the load generator's event loop stalled or it could not issue the scheduled
+  rate. This *does* invalidate the run. Locally it is common because mongod and the load generator
+  share CPUs.
 
 ## 9. Valid and invalid conclusions
 
@@ -309,6 +324,7 @@ All settings are documented in [`.env.example`](.env.example). The most importan
 | `SLO_MS` / `OP_TIMEOUT_MS` | 500 / 5000 | SLO and per-request deadline |
 | `WORKERS` / `POOL_SIZE_PER_WORKER` | 4 / 250 | load-generator parallelism |
 | `CLIENT_RETRY_MODE` | `none` | `none` / `app` / `driver` |
+| `APP_RETRY_BUDGET` | 0.1 | retries per original request in `app` mode (token bucket) |
 
 ## 15. Demo script
 
