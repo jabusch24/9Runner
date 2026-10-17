@@ -147,3 +147,10 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# 9Runner
+dist/
+.env
+results/*.json
+results/*.csv
+results/history/

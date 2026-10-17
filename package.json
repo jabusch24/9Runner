@@ -1,0 +1,40 @@
+{
+  "name": "9runner",
+  "version": "0.2.0",
+  "private": true,
+  "description": "MongoDB 8 vs 9 demo: Intelligent Workload Management, Load Shedding and Search facet aggregations on a realistic e-commerce workload",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run -s build && node --test dist/test/",
+    "cli": "npm run -s build && node dist/src/cli/index.js",
+    "probe": "npm run -s cli -- probe",
+    "seed": "npm run -s cli -- seed",
+    "search:index": "npm run -s cli -- search-index",
+    "calibrate": "npm run -s cli -- calibrate",
+    "benchmark:search": "npm run -s cli -- benchmark search",
+    "benchmark:facets": "npm run -s cli -- benchmark facets",
+    "benchmark:aggregation": "npm run -s cli -- benchmark aggregation",
+    "benchmark:iwm": "npm run -s cli -- benchmark iwm",
+    "benchmark:load-shedding": "npm run -s cli -- benchmark load-shedding",
+    "benchmark:mongo8-vs-9": "npm run -s cli -- benchmark mongo8-vs-9",
+    "benchmark:all": "npm run -s cli -- benchmark all",
+    "export:csv": "npm run -s cli -- export-csv",
+    "local:emulate": "npm run -s cli -- local-emulation",
+    "demo": "npm run -s build && node dist/src/server/index.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "mongodb": "^7.7.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.6.3"
+  }
+}
